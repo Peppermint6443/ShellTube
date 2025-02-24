@@ -23,13 +23,16 @@ g = 9.81                                # m/s^2
 N = 56                                  # number of tubes    
 
 # calculate the heat transfer area
-Ai = .25 * np.pi * di**2
-Ao = .25 * np.pi * do**2
+# Ai = .25 * np.pi * di**2 * N
+# Ao = .25 * np.pi * do**2 * N
+Ai = np.pi * di * N * L
+Ao = np.pi * do * N * L
 
 # ----- Functions ----- #
 def hi(Qi,Ti):
     # calculate the velocity
-    v = Qi / Ai
+    Ac = np.pi * di**2 * .25 * N
+    v = Qi / Ac
 
     # calculate the Reynolds number
     Re = water.ldn(Ti) * v * di / water.lvs(Ti)
@@ -51,7 +54,8 @@ def ho(Ps,Ts):
     kl = water.ltc(Ts)
     mul = water.lvs(Ts)
     Tsat = water.tsat(Ps)
-    cpl = water.lcp(Ts) / water.mw
+    cpl = water.vcp(Ts,Ps) / water.mw
+    # cpl = water.lcp(Ts) / water.mw
     hfg = water.hvp(Ts) / water.mw
 
     # find Ja
@@ -71,11 +75,12 @@ ho_vec = np.vectorize(ho)
 def model(inputs,Rf):
     Qwd,Psd,Tweffd = inputs
 
-    #                       |                 |                                 |
-    #      convection_inner | fouling_inner   |             conduction          | convection_outer
-    #                       |                 |                                 |
-    UA = ((hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L)) + (ho_vec(Psd, Tweffd) / Ao)**-1)**-1
-    # print(UA)
+    #                                  |               |                                        |
+    #      convection_inner            | fouling_inner |               conduction               | convection_outer
+    #                                  |               |                                        |
+    sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    # print(Rf / Ai)
+    UA = 1 / sumR
     return UA
 
 
@@ -111,7 +116,7 @@ for i, df in enumerate(data_collection):
 Tavg = (Twout + Twin) / 2
 
 # conver the data to SI units
-qs_good = qs * 6.30901964e-5                # gal/min to m^3/s
+qs_good = qs * .003785 / 60                 # gal/min to m^3/s
 Ps_good = (Ps + 14.7) * 101325 / 14.7       # psig to Pa
 Cpw = water.lcp(Tavg + 273.15) / water.mw   # J/kg.K
 
@@ -128,13 +133,13 @@ dTlm = (dT1 - dT2) / np.log(dT1 / dT2)
 
 # calculate the mass flow rate of the water 
 rho = water.ldn(Tavg + 273.15)
-m = qs_good / rho
+m = qs_good * rho
 
 # find the heat transfer
 Q = -m * Cpw * (Twin - Twout)
 
 # calculate the heat transfer coefficient
-UA = Q / dTlm
+UA_array = Q / dTlm
 
 
 # # fit the data with the model
@@ -143,7 +148,7 @@ UA = Q / dTlm
 xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
 
 # print(xdata)
-Rf, _ = curve_fit(model, xdata, UA)
+Rf, _ = curve_fit(model, xdata, UA_array)
 Rf = Rf[0]
 
 print(Rf)
@@ -164,10 +169,10 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot_surface(flow_rate_mesh * 1000, pressure_mesh / 101325, UA_mesh, cmap='viridis')
 
-ax.scatter(qs_good * 1000, Ps_good / 101325, UA, color = '#ff9933', label='Data Points', s = 1)
+ax.scatter(qs_good * 1000, Ps_good / 101325, UA_array, color = '#ff9933', label='Data Points', s = 1)
 
-ax.set_xlabel('Flow Rate (m^3/s)')
-ax.set_ylabel('Pressure (Pa)')
+ax.set_xlabel('Flow Rate (L/s)')
+ax.set_ylabel('Pressure (atm)')
 ax.set_zlabel('UA Coefficient (W/K)')
 ax.set_title('UA Coefficient as a Function of Flow Rate and Pressure')
 
@@ -177,7 +182,7 @@ plt.show()
 UA_fit = model((qs_good, Ps_good, Tavg + 273.15), Rf)
 
 plt.figure()
-plt.plot(UA, label='Actual UA')
+plt.plot(UA_array, label='Actual UA')
 plt.plot(UA_fit, label='Fitted UA')
 plt.xlabel('Data Points')
 plt.ylabel('UA Coefficient (W/K)')
