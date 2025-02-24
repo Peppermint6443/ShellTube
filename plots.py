@@ -18,7 +18,7 @@ from byutpl.properties import water as water
 di = .206 * 2.54 / 100                  # m
 do = .25 * 2.54 / 100                   # m
 L = 14 * 2.54 / 100                     # m
-k = 13.4                                # W/m.K 316 SS
+k = 16.3                                # W/m.K 316 SS
 g = 9.81                                # m/s^2
 N = 56                                  # number of tubes    
 
@@ -78,8 +78,9 @@ def model(inputs,Rf):
     #                                  |               |                                        |
     #      convection_inner            | fouling_inner |               conduction               | convection_outer
     #                                  |               |                                        |
-    sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L)) + (ho_vec(Psd, Tweffd) * Ao)**-1
-    # print(Rf / Ai)
+    sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    # sumR = .1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
     UA = 1 / sumR
     return UA
 
