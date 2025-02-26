@@ -101,10 +101,13 @@ data9 = pd.read_csv('data/Trial9.csv')
 dataA = pd.read_csv('data/TrialA.csv')
 dataB = pd.read_csv('data/TrialB.csv')
 dataC = pd.read_csv('data/TrialC.csv')
+dataD = pd.read_csv('data/TrialD.csv')
+dataE = pd.read_csv('data/TrialE.csv')
+dataF = pd.read_csv('data/TrialF.csv')
 
 
-# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA,dataB,dataC])
-data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC])
+# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
+data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
 
 print(data4.keys())
 
@@ -125,7 +128,7 @@ Tavg = (Twout + Twin) / 2
 
 # conver the data to SI units
 qs_good = qs * .003785 / 60                 # gal/min to m^3/s
-Ps_good = (Ps + 14.7) * 101325 / 14.7       # psig to Pa
+Ps_good = (Ps + 12.57) * 101325 / 14.7       # psig to Pa
 Cpw = water.lcp(Tavg + 273.15) / water.mw   # J/kg.K
 
 tsat = np.vectorize(water.tsat)
