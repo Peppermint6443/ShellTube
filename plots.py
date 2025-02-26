@@ -86,6 +86,15 @@ def model(inputs,Rf):
     UA = 1 / sumR
     return UA
 
+# def model(inputs, Rfi,Rfo):
+#     Qwd,Psd,Tweffd = inputs
+#     #                       |                 |                                  |                 |
+#     #      convection_inner | fouling_inner   |             conduction           |  fouling_outer  | convection_outer
+#     #                       |                 |                                  |                 |
+#     sumR = (hi_vec(Qwd,Tweffd) * Ai)**-1 + (Rfi / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (Rfo / Ao) + (ho_vec(Psd, Tweffd) / Ao)**-1
+#     UA = 1 / sumR
+#     return UA
+
 
 
 # ---------------------------------------------- Import Data ---------------------------------------------- #
@@ -159,11 +168,17 @@ UA_array = Q / dTlm
 
 xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
 
-# print(xdata)
+print(xdata)
 Rf, _ = curve_fit(model, xdata, UA_array)
 Rf = Rf[0]
 
 print(Rf)
+
+# Rf, _ = curve_fit(model, xdata, UA_array)
+# Rfi = Rf[0]
+# Rfo = Rf[1]
+
+# print(Rfi,Rfo)
 
 
 # ---------------------------------------------- Plotting ---------------------------------------------- #
