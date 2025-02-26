@@ -74,26 +74,26 @@ hi_vec = np.vectorize(hi)
 ho_vec = np.vectorize(ho)
 
 
-# def model(inputs,Rf):
-#     Qwd,Psd,Tweffd = inputs
-
-#     #                                  |               |                                        |
-#     #      convection_inner            | fouling_inner |               conduction               | convection_outer
-#     #                                  |               |                                        |
-#     sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
-#     # sumR = .1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
-#     # print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
-#     UA = 1 / sumR
-#     return UA
-
-def model(inputs, Rfi,Rfo):
+def model(inputs,Rf):
     Qwd,Psd,Tweffd = inputs
-    #                       |                 |                                  |                 |
-    #      convection_inner | fouling_inner   |             conduction           |  fouling_outer  | convection_outer
-    #                       |                 |                                  |                 |
-    sumR = (hi_vec(Qwd,Tweffd) * Ai)**-1 + (Rfi / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (Rfo / Ao) + (ho_vec(Psd, Tweffd) / Ao)**-1
+
+    #                                  |               |                                        |
+    #      convection_inner            | fouling_inner |               conduction               | convection_outer
+    #                                  |               |                                        |
+    sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    # sumR = .1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    # print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
     UA = 1 / sumR
     return UA
+
+# def model(inputs, Rfi,Rfo):
+#     Qwd,Psd,Tweffd = inputs
+#     #                       |                 |                                  |                 |
+#     #      convection_inner | fouling_inner   |             conduction           |  fouling_outer  | convection_outer
+#     #                       |                 |                                  |                 |
+#     sumR = (hi_vec(Qwd,Tweffd) * Ai)**-1 + (Rfi / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (Rfo / Ao) + (ho_vec(Psd, Tweffd) / Ao)**-1
+#     UA = 1 / sumR
+#     return UA
 
 
 
@@ -168,16 +168,16 @@ UA_array = Q / dTlm
 
 xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
 
-# Rf, _ = curve_fit(model, xdata, UA_array)
-# Rf = Rf[0]
+Rf, _ = curve_fit(model, xdata, UA_array)
+Rf = Rf[0]
 
-# print(Rf)
+print(Rf)
 
-Rf, _ = curve_fit(model, xdata, UA_array, bounds = (0,np.inf))
-Rfi = Rf[0]
-Rfo = Rf[1]
+# Rf, _ = curve_fit(model, xdata, UA_array, bounds = (0,np.inf))
+# Rfi = Rf[0]
+# Rfo = Rf[1]
 
-print(Rfi,Rfo)
+# print(Rfi,Rfo)
 
 
 # ---------------------------------------------- Plotting ---------------------------------------------- #
@@ -188,8 +188,8 @@ flow_rate_mesh, pressure_mesh = np.meshgrid(flow_rate_range, pressure_range)
 
 # Calculate the UA coefficient for each point in the mesh grid using the fit function
 temperature_avg = np.mean(Tavg + 273.15)
-# UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rf)
-UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rfi,Rfo)
+UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rf)
+# UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rfi,Rfo)
 
 # Plot the 3D surface of the UA coefficient
 fig = plt.figure()
