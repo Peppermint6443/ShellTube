@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from mpl_toolkits.mplot3d import Axes3D
 
 import scipy.optimize as opt
 from scipy.integrate import odeint, quad
@@ -28,6 +29,7 @@ N = 56                                  # number of tubes
 Ai = np.pi * di * N * L
 Ao = np.pi * do * N * L
 
+# ---------------------------------------------- Functions ---------------------------------------------- #
 # ----- Functions ----- #
 def hi(Qi,Ti):
     # calculate the velocity
@@ -86,7 +88,7 @@ def model(inputs,Rf):
 
 
 
-
+# ---------------------------------------------- Import Data ---------------------------------------------- #
 data1 = pd.read_csv('data/Trial1.csv')
 data2 = pd.read_csv('data/Trial2.csv')
 data3 = pd.read_csv('data/Trial3.csv')
@@ -97,10 +99,12 @@ data7 = pd.read_csv('data/Trial7.csv')
 data8 = pd.read_csv('data/Trial8.csv')
 data9 = pd.read_csv('data/Trial9.csv')
 dataA = pd.read_csv('data/TrialA.csv')
+dataB = pd.read_csv('data/TrialB.csv')
+dataC = pd.read_csv('data/TrialC.csv')
 
 
-# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA])
-data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA])
+# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA,dataB,dataC])
+data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC])
 
 print(data4.keys())
 
@@ -110,6 +114,7 @@ Twout = np.array([])
 Twin = np.array([])
 Ps = np.array([])
 
+# create the data arrays
 for i, df in enumerate(data_collection):
     qs = np.append(qs,df[:,2])
     Twout = np.append(Twout,df[:,6])
@@ -127,6 +132,7 @@ tsat = np.vectorize(water.tsat)
 
 Tsat = tsat(Ps_good)
 
+# ---------------------------------------------- Calculations ---------------------------------------------- #
 # calculate the delta T values
 dT1 = Tsat - Twout
 dT2 = Tsat - Twin
@@ -156,16 +162,16 @@ Rf = Rf[0]
 
 print(Rf)
 
-from mpl_toolkits.mplot3d import Axes3D
 
+# ---------------------------------------------- Plotting ---------------------------------------------- #
 # Create a 3D mesh grid for flow rate and pressure
-flow_rate_range = np.linspace(min(qs_good), max(qs_good), 50)
-pressure_range = np.linspace(min(Ps_good), max(Ps_good), 50)
+flow_rate_range = np.linspace(min(qs_good), max(qs_good),100)
+pressure_range = np.linspace(min(Ps_good), max(Ps_good), 100)
 flow_rate_mesh, pressure_mesh = np.meshgrid(flow_rate_range, pressure_range)
 
 # Calculate the UA coefficient for each point in the mesh grid using the fit function
 temperature_avg = np.mean(Tavg + 273.15)
-UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg), Rf)
+UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rf)
 
 # Plot the 3D surface of the UA coefficient
 fig = plt.figure()
