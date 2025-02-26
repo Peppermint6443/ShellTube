@@ -40,7 +40,7 @@ def hi(Qi,Ti):
     Re = water.ldn(Ti) * v * di / water.lvs(Ti)
 
     # calculate the Nusselt number
-    if Re < 10000:
+    if Re < 2300:
         Nu = 3.66
     else:
         Nu = .023 * (Re**.8) * water.lpr(Ti)**.4
