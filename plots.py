@@ -80,24 +80,27 @@ def model(inputs,Rf):
     #                                  |               |                                        |
     sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
     # sumR = .1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
-    print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
+    # print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
     UA = 1 / sumR
     return UA
 
 
 
 
-# data1 = pd.read_csv('data/Trial1.csv')
-# data2 = pd.read_csv('data/Trial2.csv')
-# data3 = pd.read_csv('data/Trial3.csv')
+data1 = pd.read_csv('data/Trial1.csv')
+data2 = pd.read_csv('data/Trial2.csv')
+data3 = pd.read_csv('data/Trial3.csv')
 data4 = pd.read_csv('data/Trial4.csv')
 data5 = pd.read_csv('data/Trial5.csv')
 data6 = pd.read_csv('data/Trial6.csv')
 data7 = pd.read_csv('data/Trial7.csv')
+data8 = pd.read_csv('data/Trial8.csv')
+data9 = pd.read_csv('data/Trial9.csv')
+dataA = pd.read_csv('data/TrialA.csv')
 
 
-data_collection = np.array([data4,data5,data6,data7])
-# data_collection = np.array([data1,data2,data3,data4,data5,data6,data7])
+# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA])
+data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA])
 
 print(data4.keys())
 
@@ -112,7 +115,6 @@ for i, df in enumerate(data_collection):
     Twout = np.append(Twout,df[:,6])
     Twin = np.append(Twin,df[:,5])
     Ps = np.append(Ps,df[:,4])
-
     
 Tavg = (Twout + Twin) / 2
 
@@ -189,6 +191,6 @@ plt.xlabel('Data Points')
 plt.ylabel('UA Coefficient (W/K)')
 plt.legend()
 plt.title('Actual vs Fitted UA Coefficient')
-plt.show()
+# plt.show()
 
 
