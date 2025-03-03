@@ -49,7 +49,9 @@ def hi(Qi,Ti):
     h = Nu * water.ltc(Ti) / di
     return h
 
-def ho(Ps,Ts):
+def s1(Ts,Ps,heat_water):
+    if Ts < (20 + 273.15) or Ts > (110 + 273.15):
+        return 1000000
     # pull in the values
     rhol = water.ldn(Ts)
     rhov = water.vdn(Ts,Ps)
@@ -59,15 +61,62 @@ def ho(Ps,Ts):
     cpl = water.vcp(Ts,Ps) / water.mw
     # cpl = water.lcp(Ts) / water.mw
     hfg = water.hvp(Ts) / water.mw
+    nul = water.lnu(Ts)
+    Prl = water.lpr(Ts)
+    Lbaf = 6 * 2.54 / 100
 
-    # find Ja
-    Ja = cpl * (Tsat - Ts) / hfg
+    corr_val = kl / (nul**2 / g)**(1/3)
+    Pval = Lbaf * (Tsat - Ts) * corr_val / (mul * hfg)
 
-    # calculate the condensation energy
-    hfp = hfg * (1 + (.68 * Ja))
+    if Pval < 15.8:
+        h = .943 * Pval**-.25 * corr_val
+    elif Pval <= 2530:
+        h = ((.68 * Pval) + .89)**.82 * corr_val / Pval
+    else: 
+        h = ((((.042 * Pval) - 53) * Prl**.5) + 89)**(4 / 3) * corr_val / Pval 
 
-    # calculate the heat transfer coefficient
-    h = .729 * (rhol * g * (rhol - rhov) * hfp * kl**3 / (N * mul * (Tsat - Ts) * do))**.25
+    
+    Q_steam = h * (Tsat - Ts) * Ao
+
+    return Q_steam - heat_water
+
+def ho(Ps,Ts,heat_water):
+    # pull in the values
+    rhol = water.ldn(Ts)
+    rhov = water.vdn(Ts,Ps)
+    kl = water.ltc(Ts)
+    mul = water.lvs(Ts)
+    Tsat = water.tsat(Ps)
+    cpl = water.vcp(Ts,Ps) / water.mw
+    # cpl = water.lcp(Ts) / water.mw
+    hfg = water.hvp(Ts) / water.mw
+    nul = water.lnu(Ts)
+    Prl = water.lpr(Ts)
+    Lbaf = 6 * 2.54 / 100
+
+    # # find Ja
+    # Ja = cpl * (Tsat - Ts) / hfg
+
+    # # calculate the condensation energy
+    # hfp = hfg * (1 + (.68 * Ja))
+
+    # # calculate the heat transfer coefficient
+    # h = .729 * (rhol * g * (rhol - rhov) * hfp * kl**3 / (N * mul * (Tsat - Ts) * do))**.25
+
+    # solve for the surface temperature
+    Tsurf = opt.fsolve(s1,Ts,args=(Ps,heat_water))[0]
+
+    # calculate the P value
+    corr_val = kl / (nul**2 / g)**(1/3)
+    Pval = Lbaf * (Tsat - Tsurf) * corr_val / (mul * hfg)
+
+    if Pval < 15.8:
+        h = .943 * Pval**-.25 * corr_val
+    elif Pval <= 2530:
+        h = ((.68 * Pval) + .89)**.82 * corr_val / Pval
+    else: 
+        h = ((((.042 * Pval) - 53) * Prl**.5) + 89)**(4 / 3) * corr_val / Pval 
+
     return h
 
 hi_vec = np.vectorize(hi)
@@ -75,14 +124,19 @@ ho_vec = np.vectorize(ho)
 
 
 def model(inputs,Rf):
-    Qwd,Psd,Tweffd = inputs
+    Qwd,Psd,Tweffd,heat_water_array = inputs
+    heat_water = np.average(heat_water_array)
 
     #                                  |               |                                        |
     #      convection_inner            | fouling_inner |               conduction               | convection_outer
     #                                  |               |                                        |
-    sumR = (hi_vec(Qwd, Tweffd) * Ai)**-1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
+    h1 = (hi_vec(Qwd, Tweffd) * Ai)**-1
+    h2 = (ho_vec(Psd, Tweffd,heat_water) * Ao)**-1
+    sumR = h1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + h2
     # sumR = .1 + (Rf / Ai) + (np.log(do / di) / (2 * np.pi * k * L * N)) + (ho_vec(Psd, Tweffd) * Ao)**-1
     # print(((hi_vec(Qwd, Tweffd) * Ai)**-1)[0], (Rf / Ai), (np.log(do / di) / (2 * np.pi * k * L * N)), ((ho_vec(Psd, Tweffd) * Ao)**-1)[0])
+
+    print(h1,h2)
     UA = 1 / sumR
     return UA
 
@@ -157,16 +211,16 @@ rho = water.ldn(Tavg + 273.15)
 m = qs_good * rho
 
 # find the heat transfer
-Q = -m * Cpw * (Twin - Twout)
+Q_water = -m * Cpw * (Twin - Twout)
 
 # calculate the heat transfer coefficient
-UA_array = Q / dTlm
+UA_array = Q_water / dTlm
 
 
 # # fit the data with the model
 # Rf = curve_fit(model, (qs_good,Ps_good,Tavg + 273.15), UA)
 
-xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
+xdata = np.array([qs_good, Ps_good, Tavg + 273.15,Q_water])  # Stack inputs correctly
 
 Rf, _ = curve_fit(model, xdata, UA_array)
 Rf = Rf[0]
@@ -189,7 +243,7 @@ flow_rate_mesh, pressure_mesh = np.meshgrid(flow_rate_range, pressure_range)
 
 # Calculate the UA coefficient for each point in the mesh grid using the fit function
 temperature_avg = np.mean(Tavg + 273.15)
-UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rf)
+UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg, Q_water),Rf)
 # UA_mesh = model((flow_rate_mesh, pressure_mesh, temperature_avg),Rfi,Rfo)
 
 # Plot the 3D surface of the UA coefficient
@@ -253,14 +307,14 @@ for df in data_collection:
     m = qs_good * rho
 
     # Find the heat transfer
-    Q = -m * Cpw * (Twin - Twout)
+    Q_water = -m * Cpw * (Twin - Twout)
 
     # Calculate the heat transfer coefficient
-    UA_array = Q / dTlm
+    UA_array = Q_water / dTlm
 
     # Fit the data with the model
     xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
-    Rf,cv = curve_fit(model, xdata, UA_array)
+    Rf,cv = curve_fit(model, xdata, UA_array,Q_water)
     Rf_values.append(Rf[0])
     cv_values.append(cv[0,0])
 
