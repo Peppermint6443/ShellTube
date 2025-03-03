@@ -98,10 +98,10 @@ def model(inputs,Rf):
 
 
 # ---------------------------------------------- Import Data ---------------------------------------------- #
-data1 = pd.read_csv('data/Trial1.csv')
-data2 = pd.read_csv('data/Trial2.csv')
-data3 = pd.read_csv('data/Trial3.csv')
-data4 = pd.read_csv('data/Trial4.csv')
+# data1 = pd.read_csv('data/Trial1.csv')
+# data2 = pd.read_csv('data/Trial2.csv')
+# data3 = pd.read_csv('data/Trial3.csv')
+# data4 = pd.read_csv('data/Trial4.csv')
 data5 = pd.read_csv('data/Trial5.csv')
 data6 = pd.read_csv('data/Trial6.csv')
 data7 = pd.read_csv('data/Trial7.csv')
@@ -115,10 +115,10 @@ dataE = pd.read_csv('data/TrialE.csv')
 dataF = pd.read_csv('data/TrialF.csv')
 
 
-# data_collection =                 np.array([data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
-data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
+data_collection =                 np.array([data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
+# data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
 
-print(data4.keys())
+print(data5.keys())
 
 
 qs = np.array([])
