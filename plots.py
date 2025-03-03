@@ -98,10 +98,10 @@ def model(inputs,Rf):
 
 
 # ---------------------------------------------- Import Data ---------------------------------------------- #
-# data1 = pd.read_csv('data/Trial1.csv')
-# data2 = pd.read_csv('data/Trial2.csv')
-# data3 = pd.read_csv('data/Trial3.csv')
-# data4 = pd.read_csv('data/Trial4.csv')
+data1 = pd.read_csv('data/Trial1.csv')
+data2 = pd.read_csv('data/Trial2.csv')
+data3 = pd.read_csv('data/Trial3.csv')
+data4 = pd.read_csv('data/Trial4.csv')
 data5 = pd.read_csv('data/Trial5.csv')
 data6 = pd.read_csv('data/Trial6.csv')
 data7 = pd.read_csv('data/Trial7.csv')
@@ -115,8 +115,8 @@ dataE = pd.read_csv('data/TrialE.csv')
 dataF = pd.read_csv('data/TrialF.csv')
 
 
-data_collection =                 np.array([data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
-# data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
+# data_collection =                 np.array([data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
+data_collection = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9,dataA,dataB,dataC,dataD,dataE,dataF])
 
 print(data5.keys())
 
@@ -172,6 +172,7 @@ Rf, _ = curve_fit(model, xdata, UA_array)
 Rf = Rf[0]
 
 print(Rf)
+print(_[0,0])
 
 # Rf, _ = curve_fit(model, xdata, UA_array, bounds = (0,np.inf))
 # Rfi = Rf[0]
@@ -218,3 +219,58 @@ plt.title('Actual vs Fitted UA Coefficient')
 # plt.show()
 
 
+# ---------------------------------------------- Array of Rf Values ---------------------------------------------- #
+
+# Calculate Rf value for each trial
+Rf_values = []
+cv_values = []
+
+for df in data_collection:
+    qs = df[:,2]
+    Twout = df[:,6]
+    Twin = df[:,5]
+    Ps = df[:,4]
+    
+    Tavg = (Twout + Twin) / 2
+
+    # Convert the data to SI units
+    qs_good = qs * .003785 / 60                 # gal/min to m^3/s
+    Ps_good = (Ps + 14.7) * 101325 / 14.7       # psig to Pa
+    Cpw = water.lcp(Tavg + 273.15) / water.mw   # J/kg.K
+
+    tsat = np.vectorize(water.tsat)
+    Tsat = tsat(Ps_good)
+
+    # Calculate the delta T values
+    dT1 = Tsat - Twout
+    dT2 = Tsat - Twin
+
+    # Calculate the delta T log mean
+    dTlm = (dT1 - dT2) / np.log(dT1 / dT2)
+
+    # Calculate the mass flow rate of the water 
+    rho = water.ldn(Tavg + 273.15)
+    m = qs_good * rho
+
+    # Find the heat transfer
+    Q = -m * Cpw * (Twin - Twout)
+
+    # Calculate the heat transfer coefficient
+    UA_array = Q / dTlm
+
+    # Fit the data with the model
+    xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
+    Rf,cv = curve_fit(model, xdata, UA_array)
+    Rf_values.append(Rf[0])
+    cv_values.append(cv[0,0])
+
+# Perform statistical analysis on the Rf values
+Rf_values = np.array(Rf_values)
+cv_values = np.array(cv_values)
+mean_Rf = np.mean(Rf_values)
+std_Rf = np.std(Rf_values)
+
+print("Rf values for each trial:", Rf_values)
+print("Coefficient of variation for each trial:", cv_values)
+print("Mean Rf value:", mean_Rf)
+print("Standard deviation of Rf values:", std_Rf)
