@@ -261,15 +261,15 @@ ax.set_title('UA Coefficient as a Function of Flow Rate and Pressure')
 plt.show()
 
 # Plot the fit function with the minimized Rf value
-UA_fit = model((qs_good, Ps_good, Tavg + 273.15), Rf)
+# UA_fit = model((qs_good, Ps_good, Tavg + 273.15), Rf)
 
-plt.figure()
-plt.plot(UA_array, label='Actual UA')
-plt.plot(UA_fit, label='Fitted UA')
-plt.xlabel('Data Points')
-plt.ylabel('UA Coefficient (W/K)')
-plt.legend()
-plt.title('Actual vs Fitted UA Coefficient')
+# plt.figure()
+# plt.plot(UA_array, label='Actual UA')
+# plt.plot(UA_fit, label='Fitted UA')
+# plt.xlabel('Data Points')
+# plt.ylabel('UA Coefficient (W/K)')
+# plt.legend()
+# plt.title('Actual vs Fitted UA Coefficient')
 # plt.show()
 
 
@@ -313,8 +313,8 @@ for df in data_collection:
     UA_array = Q_water / dTlm
 
     # Fit the data with the model
-    xdata = np.array([qs_good, Ps_good, Tavg + 273.15])  # Stack inputs correctly
-    Rf,cv = curve_fit(model, xdata, UA_array,Q_water)
+    xdata = np.array([qs_good, Ps_good, Tavg + 273.15,Q_water])  # Stack inputs correctly
+    Rf,cv = curve_fit(model, xdata, UA_array)
     Rf_values.append(Rf[0])
     cv_values.append(cv[0,0])
 
